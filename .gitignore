@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+migrations/
+.history/
+runs/
+.env
+uploads/
+runs/
