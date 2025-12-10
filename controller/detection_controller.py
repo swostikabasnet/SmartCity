@@ -171,7 +171,8 @@ def get_detections_by_user(current_user, user_id):
     stmt = (
         select(Detection)
         .where(Detection.user_id == user_id)
-        .options(joinedload(Detection.user)) 
+        .options(joinedload(Detection.user))
+        .options(joinedload(Detection.organization))
         .order_by(Detection.timestamp.desc())
     )
     records = db.session.execute(stmt).scalars().all() 
@@ -179,7 +180,8 @@ def get_detections_by_user(current_user, user_id):
         return jsonify({"message": "No detections found for this user"}), 404
     data = []
     for det in records:
-        user = det.user         
+        user = det.user
+        org = det.organization         
         det_dict = {
             "id": det.id,
             "detection_type": det.detection_type,
@@ -189,12 +191,22 @@ def get_detections_by_user(current_user, user_id):
             "latitude": det.latitude,
             "longitude": det.longitude,
             "location": det.location,
+            # New required fields
+            "detection_status": getattr(det, "detection_status", None),
+            "area_pct": getattr(det, "area_pct", None),
+            "est_depth_m": getattr(det, "est_depth_m", None),
+            "department": getattr(det, "department", None),
+            "pothole_severity": getattr(det, "pothole_severity", None),
+            "waste_category": getattr(det, "waste_category", None),
+            # Organization fields
+            "organization_id": det.organization_id,
+            "organization_name": org.organization_name if org else None,
+            #user info
             "user": {
                 "id": user.id,
                 "name": getattr(user, 'name', None),
                 "email": user.email,
                 "role": getattr(user, 'role', None),
-                "organization_name": getattr(user, 'organization_name', None)
             }
         }
         data.append(det_dict)
