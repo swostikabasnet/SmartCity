@@ -13,7 +13,7 @@ class Tag(db.Model):
     )
     name = db.Column(db.String, nullable=False)
     
-    department_id = db.Column(db.String(36), db.ForeignKey('department.id'), nullable=True) # 👈 Change to String(36)
+    department_id = db.Column(db.String(36), db.ForeignKey('department.id'), nullable=True)
 
     user_id = db.Column(db.String(36), db.ForeignKey('user.id'), nullable=True)
 

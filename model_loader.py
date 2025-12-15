@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 class ModelLoader:
     def __init__(self, waste_model_path, pothole_model_path):
-        # FIX: Dynamically determine the best device (CUDA if available, otherwise CPU)
+        
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         
         logger.info(f"Loading YOLO models on {self.device.upper()}...")
@@ -29,7 +29,6 @@ class ModelLoader:
     def predict(self, image_path, task_type="waste", conf=0.25, imgsz=640):
         model = self.waste_model if task_type == "waste" else self.pothole_model
 
-        # Pass the dynamically set device to the prediction call
         return model(
             source=image_path,
             conf=conf,

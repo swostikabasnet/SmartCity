@@ -5,7 +5,6 @@ import uuid6 as uuid
 class User(db.Model):
     __tablename__ = "user"
 
-    # Changed from db.Integer to db.String(36) to store UUIDv7
     id = db.Column(
         db.String(36), 
         primary_key=True, 

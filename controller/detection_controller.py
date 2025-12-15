@@ -17,15 +17,10 @@ def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'png','jpg','jpeg','gif'}
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# GET — List all organization users (for reference)
+# GET — List all organization users
 @detection_bp.route('/organizations', methods=['GET'])
-def get_organizations():
-    """
-    Return all registered organization users with their details.
-    Useful for understanding which organizations handle which detections.
-    """
+def get_organizations(): #Return all registered organization users with their details.
     organizations = User.query.filter_by(role="organization").all()
-    
     org_data = []
     for org in organizations:
         org_data.append({
@@ -81,7 +76,7 @@ def create_detection(current_user):
     if not detection_record:
         return jsonify({'error': 'Detection saved in service but failed to retrieve record.'}), 500
 
-    # Prepare response
+    #response
     result_data.update({
         "id": detection_record.id,
         "user": {
@@ -125,18 +120,16 @@ def create_detection(current_user):
 @token_required
 def get_my_detections(current_user):
 
-    # If normal user → show only detections uploaded by them
+    # If normal user -> show only detections uploaded by them
     if current_user.role == "user":
         detections = Detection.query.filter_by(user_id=current_user.id).order_by(Detection.id.desc()).all()
 
-    # If organization → show detections assigned to that organization
+    # If organization -> show detections assigned to that organization
     elif current_user.role == "organization":
         detections = Detection.query.filter_by(organization_id=current_user.id).order_by(Detection.id.desc()).all()
 
     else:
         return jsonify({"error": "Invalid role"}), 403
-
-    # Convert all detections to JSON
     data = [d.to_dict() for d in detections]
 
     return jsonify({
@@ -191,16 +184,17 @@ def get_detections_by_user(current_user, user_id):
             "latitude": det.latitude,
             "longitude": det.longitude,
             "location": det.location,
-            # New required fields
             "detection_status": getattr(det, "detection_status", None),
             "area_pct": getattr(det, "area_pct", None),
             "est_depth_m": getattr(det, "est_depth_m", None),
             "department": getattr(det, "department", None),
             "pothole_severity": getattr(det, "pothole_severity", None),
             "waste_category": getattr(det, "waste_category", None),
+
             # Organization fields
             "organization_id": det.organization_id,
             "organization_name": org.organization_name if org else None,
+
             #user info
             "user": {
                 "id": user.id,
@@ -245,7 +239,7 @@ def get_user_full_details(current_user, user_id):
         "detections": []
     }
     for det in user.detections:
-        # Assuming Detection.departments and Detection.tags are relationships
+        # Here Detection.departments and Detection.tags are relationships
         departments = [dept.department.name for dept in det.departments if hasattr(dept, 'department') and dept.department]
         tags = [tag.tag.name for tag in det.tags if hasattr(tag, 'tag') and tag.tag]
         
@@ -301,18 +295,15 @@ def delete_my_detection(current_user, id):
     record = Detection.query.filter_by(user_id=current_user.id, id=id).first()
     if not record:
         return jsonify({'error': 'Record not found'}), 404
-        
-    # The image path handling is tricky as the folder is determined by detection type
-    # but the path is saved in the record. We rely on the saved paths first.
     
     original_path_to_delete = record.image_path
     annotated_path_to_delete = record.detected_image_path
     
-    # Try to delete original image
+    # to delete original image
     if original_path_to_delete and os.path.exists(original_path_to_delete):
         os.remove(original_path_to_delete)
         
-    # Try to delete annotated image
+    # to delete annotated image
     if annotated_path_to_delete and os.path.exists(annotated_path_to_delete):
         os.remove(annotated_path_to_delete)
             
@@ -335,11 +326,11 @@ def delete_all_my_by_type(current_user, detection_type):
         original_path_to_delete = record.image_path
         annotated_path_to_delete = record.detected_image_path
         
-        # Try to delete original image
+        # to delete original image
         if original_path_to_delete and os.path.exists(original_path_to_delete):
             os.remove(original_path_to_delete)
         
-        # Try to delete annotated image
+        # to delete annotated image
         if annotated_path_to_delete and os.path.exists(annotated_path_to_delete):
             os.remove(annotated_path_to_delete)
                 

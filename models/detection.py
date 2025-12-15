@@ -4,8 +4,6 @@ import uuid6 as uuid
 
 class Detection(db.Model):
     __tablename__ = "detections"
-
-    # Changed from db.Integer to db.String(36) to store UUIDv7
     id = db.Column(
         db.String(36), 
         primary_key=True, 
@@ -14,7 +12,6 @@ class Detection(db.Model):
         nullable=False
     )
     
-    # Foreign Key type changed to match the User model's new ID type
     user_id = db.Column(db.String(36), db.ForeignKey("user.id"), nullable=True) 
     organization_id = db.Column(db.String(36), db.ForeignKey("user.id"), nullable=True)
     
@@ -31,7 +28,7 @@ class Detection(db.Model):
     area_pct = db.Column(db.Float, nullable=True)
     est_depth_m = db.Column(db.Float, nullable=True)
     
-    # Set default values to prevent NOT NULL violations
+    # Setting default values to prevent NOT NULL violations
     department = db.Column(db.String(100), nullable=False, default="General")
     detection_status = db.Column(db.String(50), nullable=False, default="Pending")
 
@@ -49,7 +46,8 @@ class Detection(db.Model):
             "id": self.id,
             "user_id": self.user_id,
             "organization_id": self.organization_id,
-            # Return organization name dynamically
+
+            # to return organization name dynamically
             "organization_name": self.organization.organization_name if self.organization else "Not Assigned",
             "image_name": self.image_name,
             "image_path": self.image_path,

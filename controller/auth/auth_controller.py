@@ -15,8 +15,6 @@ auth_bp = Blueprint('auth_bp', __name__, url_prefix="/auth")
 def register():
     data = request.json
     role = data.get("role", "user")
-
-    # Common fields
     email = data.get("email")
     password = data.get("password")
 
@@ -80,7 +78,6 @@ def login():
         "user": user.to_dict() 
     }), 200
 
-# PROTECTED ROUTES 
 # PROFILE 
 @auth_bp.route('/profile', methods=['GET'])
 @token_required

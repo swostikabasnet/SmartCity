@@ -3,7 +3,6 @@ import shutil
 import time
 from datetime import datetime
 from flask import current_app
-# Assuming these imports are available and necessary
 from models import db, Detection, Image, Tag, DetectionTag, Department, DetectionDepartment
 from services.model_loader__old import ModelLoader 
 from utils.viz import annotate_and_save_ultralytics
@@ -13,7 +12,6 @@ from processors.pothole_processor import PotholeProcessor
 
 
 def _to_relative_storage(path: str):
-    """Convert absolute path under STORAGE_FOLDER to '/storage/pothole/original/file.jpg'."""
     if not path:
         return None
     root = current_app.config.get("STORAGE_FOLDER")
@@ -34,7 +32,6 @@ MODEL_LOADER = ModelLoader(
 POTHOLE_MODEL = MODEL_LOADER.pothole_model
 WASTE_MODEL = MODEL_LOADER.waste_model 
 
-# --- FIX: Removed integer conversion logic ---
 def _normalize_user_id(uid):
     """
     Ensures the user ID is treated as a string UUID.
@@ -45,9 +42,9 @@ def _normalize_user_id(uid):
 
 def save_to_database(detection_type, result):
     print("Using DB URI:", current_app.config['SQLALCHEMY_DATABASE_URI'])
-    print("Saving detection payload:", result)  # <<< DEBUG PRINT
+    print("Saving detection payload:", result)  #to debug
 
-    # FIX: Get UUID string directly and use a fallback UUID if user_id is missing
+    # Get UUID string directly and use a fallback UUID if user_id is missing
     normalized_user_id = result.get("user_id")
     if normalized_user_id is None:
         # NOTE: Using a default placeholder UUID for unauthenticated requests if required
@@ -80,8 +77,8 @@ def save_to_database(detection_type, result):
         "organization_id": organization_id,  # Set organization_id based on department
         "detection_type": detection_type,
         "image_name": result.get("image_name") or "",
-        "image_path": result.get("image_path"), # ADDED: image_path
-        "detected_image_path": result.get("detected_image_path"), # ADDED: detected_image_path
+        "image_path": result.get("image_path"), 
+        "detected_image_path": result.get("detected_image_path"),
         "latitude": result.get("latitude") or 0.0,
         "longitude": result.get("longitude") or 0.0,
         "location": result.get("location") or "",
@@ -96,21 +93,18 @@ def save_to_database(detection_type, result):
     
     detection = Detection(**payload)
     db.session.add(detection)
-    db.session.flush() # Flushes the new detection.id (UUID)
-
-    # The image row logic seems redundant given the fields in Detection, 
-    # but kept for compatibility if the Image model is used elsewhere.
+    db.session.flush() 
     annotated = result.get("annotated_name")
     if annotated:
         image_row = Image(
-            detection_id=detection.id, # detection.id is UUID string
+            detection_id=detection.id, 
             uploaded_filename=result.get("image_name") or "",
             annotated_filename=annotated,
             timestamp=datetime.utcnow()
         )
         db.session.add(image_row)
 
-    # Department relation: map string department -> Department row + DetectionDepartment ---
+    # Department relation: map string department -> Department row + DetectionDepartment 
     dept_name = result.get("department")
     department_obj = None
     if dept_name:
@@ -120,7 +114,7 @@ def save_to_database(detection_type, result):
             db.session.add(department_obj)
             db.session.flush()
 
-        # Create link row if not already present
+        # DetectionDepartment relation
         existing_dd = DetectionDepartment.query.filter_by(
             detection_id=detection.id,
             department_id=department_obj.id
@@ -133,18 +127,18 @@ def save_to_database(detection_type, result):
             db.session.add(dd)
 
     # Tag relations 
-    # 1) Waste category as tag (if present)
+    #Waste category as tag
     tag_names = []
     waste_cat = result.get("waste_category")
     if waste_cat:
         tag_names.append(str(waste_cat))
 
-    # 2) Pothole severity as tag (optional, keeps schema flexible)
+    #Pothole severity as tag
     pothole_sev = result.get("pothole_severity")
     if pothole_sev:
         tag_names.append(str(pothole_sev))
 
-    # Create / link tags
+    # link tags
     for name in tag_names:
         clean_name = name.strip()
         if not clean_name:
@@ -170,6 +164,7 @@ def save_to_database(detection_type, result):
 
     db.session.commit()
     return detection
+
 #detectiontype assign ra processor call garne function
 def detect_image_type(image, user_id, latitude=0.0, longitude=0.0, location=""):
     if not POTHOLE_MODEL or not WASTE_MODEL:
@@ -198,7 +193,7 @@ def detect_image_type(image, user_id, latitude=0.0, longitude=0.0, location=""):
         )
         annotated_image_path = os.path.join(current_app.config['POTHOLE_DETECTED_FOLDER'], annotated_filename)
 
-        # DEBUG PRINTS 
+        # DEBUG 
         print("Original image path:", original_image_path)
         print("Annotated image path:", annotated_image_path)
 
@@ -242,7 +237,7 @@ def detect_image_type(image, user_id, latitude=0.0, longitude=0.0, location=""):
         )
         annotated_image_path = os.path.join(current_app.config['WASTE_DETECTED_FOLDER'], annotated_filename)
 
-        # DEBUG PRINTS 
+        # DEBUG  
         print("Original image path:", original_image_path)
         print("Annotated image path:", annotated_image_path)
 

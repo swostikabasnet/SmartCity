@@ -1,8 +1,7 @@
 import os
-from flask import Blueprint, request, jsonify, current_app 
+from flask import Blueprint, request, jsonify 
 import logging
 from datetime import datetime
-
 from services.inference_service import InferenceService 
 from model_loader import ModelLoader 
 from utils.file_utils import save_upload 

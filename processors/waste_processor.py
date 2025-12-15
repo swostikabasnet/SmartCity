@@ -1,6 +1,6 @@
 from utils.file_utils import load_image_as_bgr_array
 import numpy as np
-# Note: cv2 is not strictly needed here, but ensure load_image_as_bgr_array is robust
+
 
 class WasteProcessor:
     def __init__(self):
@@ -62,7 +62,7 @@ class WasteProcessor:
                 "proximity_pct": float(proximity_pct)
             })
 
-        # Primary detection is the one with the largest pixel area
+       
         detections_sorted = sorted(detections, key=lambda x: x['area_px'], reverse=True)
         primary = detections_sorted[0] if detections_sorted else None
         waste_type = primary.get('class_name') if primary else 'unknown'

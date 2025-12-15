@@ -3,16 +3,12 @@ import logging
 import torch
 import sys
 
-# Add base directory to path if needed, though usually handled in app.py
+#base directory
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-# sys.path.append(BASE_DIR) 
-
 
 class Config:
     # --- Security & Core Configuration ---
     SECRET_KEY = os.environ.get("SECRET_KEY", "key123")
-
-    # CRITICAL FIX: Use environment variables for secure database connection
     DB_USER = os.environ.get("POSTGRES_USER", "postgres")
     DB_PASSWORD = os.environ.get("POSTGRES_PASSWORD", "user123")
     DB_HOST = os.environ.get("POSTGRES_HOST", "localhost")
@@ -24,7 +20,7 @@ class Config:
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
-    # --- Application Defaults (Required for UUID handling) ---
+    # --- Default User Configuration ---
     DEFAULT_USER_ID = os.environ.get(
         "DEFAULT_USER_ID", 
         "00000000-0000-7000-0000-000000000001"
@@ -35,7 +31,6 @@ class Config:
     STORAGE_FOLDER = os.path.join(BASE_DIR, 'storage')
     ANNOTATED_FOLDER = os.path.join(STORAGE_FOLDER, 'annotated')
 
-    # FIX: Add the missing configuration variable required by the controller
     DETECTION_IMAGE_FOLDER = STORAGE_FOLDER
 
     POTHOLE_ORIGINAL_FOLDER = os.path.join(STORAGE_FOLDER, 'pothole', 'original')
@@ -44,7 +39,7 @@ class Config:
     WASTE_ORIGINAL_FOLDER = os.path.join(STORAGE_FOLDER, 'waste', 'original')
     WASTE_DETECTED_FOLDER = os.path.join(STORAGE_FOLDER, 'waste', 'detected')
     
-    # Create folders immediately upon class definition
+    
     os.makedirs(STORAGE_FOLDER, exist_ok=True) 
     os.makedirs(POTHOLE_ORIGINAL_FOLDER, exist_ok=True)
     os.makedirs(POTHOLE_DETECTED_FOLDER, exist_ok=True)

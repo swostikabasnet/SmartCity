@@ -11,12 +11,11 @@ class PotholeProcessor:
         Estimates depth based on darkness heuristic (darker area = greater depth).
         Max depth assumed to be 0.3m.
         """
-        # Ensure bbox values are within image bounds and valid integers
+        # Ensure bbox values are within the image bounds
         x1, y1, x2, y2 = [int(max(0, v)) for v in bbox]
         x1, x2 = min(x1, image.shape[1]), min(x2, image.shape[1])
         y1, y2 = min(y1, image.shape[0]), min(y2, image.shape[0])
         
-        # Check for valid crop dimensions
         if x2 <= x1 or y2 <= y1:
             return 0.0
             
@@ -82,7 +81,8 @@ class PotholeProcessor:
         road_type = "unknown"
         if primary and h > 0:
             _, y1, _, y2 = primary['xyxy']
-            # If the pothole is primarily in the bottom half of the image (y > 0.5 * h)
+
+            # if the pothole is primarily in the bottom half of the image (y > 0.5 * h)
             if (y2 / h) > 0.5: 
                 road_type = "asphalt"
 

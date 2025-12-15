@@ -1,8 +1,6 @@
-# reasoning/kg_gnn.py
-"""
-Knowledge-Graph + lightweight GNN-based department classifier.
-Used AFTER YOLO detection to determine responsible department.
-"""
+#Note:Knowledge-Graph plus lightweight GNN-based department classifier
+        #This is used afeter YOLO detection to determine responsible department.
+
 
 import networkx as nx
 import numpy as np
@@ -30,17 +28,18 @@ class SimpleGNN(nn.Module):
         self.fc_out = nn.Linear(hidden_dim, out_dim)
 
     def forward(self, features, adj, steps=2):
+
         # Initial transformation
         h = F.relu(self.fc1(features))
         
-        # Message Passing (Graph Convolution equivalent for 2 steps)
+        # Message Passing (Graph Convolution)
         for _ in range(steps):
             # Message aggregation: m = A * h
             m = torch.matmul(adj, h)
             # Message update
             h = F.relu(self.fc_msg(m))
             
-        # Output layer with Sigmoid for multi-label confidence/scores
+        # Output layerfor multi-label confidence/scores
         return torch.sigmoid(self.fc_out(h))
 
 
@@ -71,9 +70,11 @@ class KnowledgeGraphReasoner:
             ("large_pothole", "Roads"),
             ("near_electric", "Electricity"),
             ("near_water", "Water"),
+
             # Municipality edges - handles large infrastructure, public issues
             ("large_pothole", "Municipality"),
             ("large_waste", "Municipality"),
+
             # Construction edges - handles construction site debris, structural damage
             ("hazardous_waste", "Construction"),
             ("deep_pothole", "Construction")
@@ -89,12 +90,11 @@ class KnowledgeGraphReasoner:
         self.hidden_dim = 16
         self.out_dim = len(DEPARTMENTS)
         
-        # Initialize model (can load pre-trained weights here if available)
+        # Initializing model (can load pre-trained weights here if available)
         self.model = SimpleGNN(self.in_dim, self.hidden_dim, self.out_dim)
 
-    # ---------------------------
-    # FEATURE MATRIX (X)
-    # ---------------------------
+    
+    # FEATURE MATRIX(X)
     def build_feature_matrix(self, detection):
         N = len(self.nodes)
         feats = np.zeros((N, self.in_dim), dtype=np.float32)
@@ -117,7 +117,6 @@ class KnowledgeGraphReasoner:
                     attr_map["hazardous_waste"] = True
 
         # ---- Pothole logic ----
-        # FIX: Corrected typo 'pothhole' to 'pothole'
         if t == "pothole": 
             p = params.get("primary", {})
             if p:
@@ -126,35 +125,34 @@ class KnowledgeGraphReasoner:
                 if p.get("est_depth_m", 0) > 0.05:
                     attr_map["deep_pothole"] = True
 
-        # Apply attribute features (Binary activation features)
+        # Applying attribute features (Binary activation features)
         for a in self.attrs:
             idx = self.node_index[a]
             val = 1.0 if attr_map[a] else 0.0
             feats[idx, 0] = val
-            feats[idx, 1] = val # Duplicating features slightly increases the input dimension size
+            feats[idx, 1] = val # dfeatures will slightly increases the input dimension size
 
         # Dept priors (Weak prior signal for each department node)
         for i, d in enumerate(DEPARTMENTS):
             idx = self.node_index[d]
-            # Use index 2 for a generic department prior feature
-            feats[idx, 2] = 0.1 
+            
+            feats[idx, 2] = 0.1 #  index 2 for a generic department prior feature
 
         return torch.from_numpy(feats)
 
-    # ---------------------------
+    
     # ADJACENCY MATRIX (A)
-    # ---------------------------
     def build_adj_matrix(self):
         N = len(self.nodes)
         adj = np.zeros((N, N), dtype=np.float32)
 
-        # Build unnormalized symmetric adjacency matrix (A)
+        #unnormalized symmetric adjacency matrix (A)
         for u, v in self.G.edges():
             ui, vi = self.node_index[u], self.node_index[v]
             adj[ui, vi] = 1 # Directed edge (for attribute -> dept)
             adj[vi, ui] = 1 # Undirected for message passing (dept -> attribute)
 
-        # Add self-loops (required for GNN message passing)
+        # self-loops (for GNN message passing)
         for i in range(N):
             adj[i, i] = 1
 
@@ -162,15 +160,15 @@ class KnowledgeGraphReasoner:
         # This is a simple normalization used in some GNN variants.
         # Note: A proper GCN uses a symmetric normalization D^-0.5 A D^-0.5
         adj_sum = adj.sum(axis=1, keepdims=True)
-        # Handle division by zero for isolated nodes (though none exist here)
+     
         adj_sum[adj_sum == 0] = 1 
         adj = adj / adj_sum
         
         return torch.from_numpy(adj)
 
-    # ---------------------------
+   
     # FINAL REASONING
-    # ---------------------------
+   
     def reason(self, detection_record):
         """
         Simple deterministic department assignment based on detection type.
@@ -213,7 +211,7 @@ class KnowledgeGraphReasoner:
                 scores["Water"] = 0.4  # Secondary
         
         else:
-            # Unknown type -> Municipality handles
+            # Unknown type -> handled by Municipality 
             scores["Municipality"] = 0.7
         
         print(f"DEBUG KG Scores for {t}: {scores}")
