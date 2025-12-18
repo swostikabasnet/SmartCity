@@ -114,7 +114,7 @@ def create_detection(current_user):
     
 
     
-
+#----------------Organization and user api with role-based access--------------------#
 # GET — All detections (current user detections only)ani tespaxi organization le afulai assigned vako detections herne
 @detection_bp.route('/my', methods=['GET'])
 @token_required
@@ -288,8 +288,8 @@ def update_my_detection(current_user, id):
         }
     }), 200
 
-# DELETE — Delete detection by id for current user
-@detection_bp.route('/my/delete/<string:image_id>', methods=['DELETE'])
+# DELETE — Delete detection by detection id for current user(detection table ko id use garera)
+@detection_bp.route('/my/delete/<string:detection_id>', methods=['DELETE'])
 @token_required
 def delete_my_detection(current_user, id):
     record = Detection.query.filter_by(user_id=current_user.id, id=id).first()

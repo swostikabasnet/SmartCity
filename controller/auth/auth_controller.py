@@ -9,7 +9,7 @@ from controller.auth.auth_middleware import token_required
 
 auth_bp = Blueprint('auth_bp', __name__, url_prefix="/auth")
 
-# AUTH ROUTES
+# AUTH ROUTES for user and organization user
 # REGISTER
 @auth_bp.route('/register', methods=['POST'])
 def register():
